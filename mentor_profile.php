@@ -38,6 +38,60 @@ $stmt->bind_result($university, $subject, $recent_profession, $location, $demo_l
 $stmt->fetch();
 $stmt->close();
 
+// Calculate average rating from reviews/ratings table
+$average_rating = 0;
+$total_reviews = 0;
+$rating_breakdown = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+
+// Fetch ratings from reviews table (assuming you have a 'reviews' table)
+$stmt = $conn->prepare("SELECT rating, COUNT(*) as count FROM reviews WHERE mentor_id = ? GROUP BY rating");
+$stmt->bind_param("i", $profile_user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$total_ratings = 0;
+$sum_ratings = 0;
+
+while ($row = $result->fetch_assoc()) {
+    $rating = intval($row['rating']);
+    $count = intval($row['count']);
+    $rating_breakdown[$rating] = $count;
+    $total_ratings += $count;
+    $sum_ratings += ($rating * $count);
+}
+
+$stmt->close();
+
+// Calculate average rating
+if ($total_ratings > 0) {
+    $average_rating = round($sum_ratings / $total_ratings, 1);
+}
+
+// Function to generate star HTML based on average rating
+function generateStars($rating) {
+    $stars_html = '';
+    $full_stars = floor($rating);
+    $has_half_star = ($rating - $full_stars) >= 0.5;
+    $empty_stars = 5 - $full_stars - ($has_half_star ? 1 : 0);
+    
+    // Full stars
+    for ($i = 0; $i < $full_stars; $i++) {
+        $stars_html .= '<i class="fas fa-star"></i>';
+    }
+    
+    // Half star
+    if ($has_half_star) {
+        $stars_html .= '<i class="fas fa-star-half-alt"></i>';
+    }
+    
+    // Empty stars
+    for ($i = 0; $i < $empty_stars; $i++) {
+        $stars_html .= '<i class="far fa-star"></i>';
+    }
+    
+    return $stars_html;
+}
+
 // Handle profile update only if own profile
 if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $full_name = trim($_POST['full_name']);
@@ -119,16 +173,11 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     height: 100%;
     overflow-x: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  
-  body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    background: linear-gradient(135deg, #e6f8e8 0%, #e4f0e8 100%);
     color: #2c3e50;
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding-top: 80px;
-    line-height: 1.6;
+    align-items: center;
   }
 
   /* Animated Background */
@@ -211,8 +260,8 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background: rgba(243, 253, 246, 0.95);
+    box-shadow: 0 4px 20px rgba(71, 71, 71, 0.23);
     position: fixed;
     top: 0;
     z-index: 1000;
@@ -266,38 +315,34 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
 
   /* Main Content */
   .main-content {
-    flex: 1;
     display: flex;
-    justify-content: center;
-    padding: 30px 20px;
+    flex-direction: column;
+    align-items: center;
     width: 100%;
+    margin-top: 100px;
+    padding: 0 20px;
     max-width: 1200px;
-    margin: 0 auto;
-    animation: fadeSlideIn 0.8s ease;
-  }
-
-  @keyframes fadeSlideIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .profile-container {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 1fr;
     gap: 30px;
     width: 100%;
   }
 
   /* Profile Card */
   .profile-card {
-    background: #fff;
+    background: rgba(243, 253, 246, 0.95);
+    box-shadow: 0 4px 20px rgba(71, 71, 71, 0.23);
+    padding: 40px;
     border-radius: 16px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    position: relative;
     border: 1px solid rgba(67, 97, 238, 0.1);
+    position: relative;
+    overflow: hidden;
     animation: slideUp 0.8s ease-out;
-    height: fit-content;
   }
 
   .profile-card::before {
@@ -306,9 +351,8 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     top: 0;
     left: 0;
     width: 100%;
-    height: 4px;
+    height: 0px;
     background: linear-gradient(90deg, #4361ee, #3a0ca3);
-    border-radius: 16px 16px 0 0;
   }
 
   .profile-header {
@@ -320,91 +364,170 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
   }
 
   .user-avatar {
-    width: 140px;
-    height: 140px;
+    width: 160px;
+    height: 160px;
     border-radius: 50%;
     object-fit: cover;
     border: 4px solid rgba(67, 97, 238, 0.1);
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 4rem;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .user-avatar.no-pic {
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .user-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   .user-name {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     font-weight: 700;
     color: #2c3e50;
     margin-bottom: 5px;
+    position: relative;
+  }
+
+  .user-name::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #4361ee, #3a0ca3);
+    border-radius: 2px;
   }
 
   .user-title {
     color: #4361ee;
     font-weight: 600;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
+    margin: 15px 0;
+    font-size: 1.2rem;
   }
 
   .user-rating {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
     margin-bottom: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .rating-stars {
     color: #ffc107;
+    font-size: 1.2rem;
+  }
+
+  .rating-stars .far {
+    color: #ddd;
   }
 
   .rating-value {
     color: #5a6c7d;
     font-weight: 600;
+    font-size: 1.1rem;
   }
 
-  .profile-stats {
+  .rating-count {
+    color: #888;
+    font-size: 0.9rem;
+  }
+
+  /* Rating breakdown */
+  .rating-breakdown {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(67, 97, 238, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(67, 97, 238, 0.1);
+  }
+
+  .rating-breakdown h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+  }
+
+  .breakdown-row {
     display: flex;
-    justify-content: space-around;
-    width: 100%;
-    margin: 20px 0;
-    padding: 15px 0;
-    border-top: 1px solid rgba(67, 97, 238, 0.1);
-    border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+    align-items: center;
+    margin-bottom: 8px;
   }
 
-  .stat {
-    text-align: center;
-  }
-
-  .stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #4361ee;
-  }
-
-  .stat-label {
-    font-size: 0.85rem;
+  .breakdown-row span {
+    width: 60px;
+    font-size: 0.9rem;
     color: #5a6c7d;
   }
 
+  .breakdown-bar {
+    flex-grow: 1;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    margin: 0 10px;
+    overflow: hidden;
+  }
+
+  .breakdown-fill {
+    height: 100%;
+    background: #ffc107;
+    border-radius: 4px;
+  }
+
+  .breakdown-count {
+    width: 40px;
+    text-align: right;
+    font-size: 0.9rem;
+    color: #5a6c7d;
+  }
+
+  /* Profile details section */
   .profile-details {
     margin-bottom: 25px;
+    padding-top: 10px;
   }
 
   .detail-item {
     display: flex;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
     align-items: flex-start;
   }
 
   .detail-item i {
     color: #4361ee;
-    margin-right: 10px;
+    margin-right: 15px;
     margin-top: 2px;
     width: 16px;
     text-align: center;
+    font-size: 1.1rem;
   }
 
   .detail-item span {
     color: #5a6c7d;
-    font-size: 0.95rem;
+    font-size: 1rem;
     line-height: 1.4;
   }
 
@@ -413,12 +536,12 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
   }
 
   .section-title {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #2c3e50;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     position: relative;
-    padding-bottom: 8px;
+    padding-bottom: 10px;
   }
 
   .section-title::after {
@@ -426,29 +549,30 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 30px;
-    height: 2px;
+    width: 40px;
+    height: 3px;
     background: linear-gradient(90deg, #4361ee, #3a0ca3);
   }
 
   .about-text {
     color: #5a6c7d;
     line-height: 1.6;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    min-height: 60px;
   }
 
   .demo-section {
-    margin-top: 20px;
+    margin-top: 25px;
     text-align: center;
     padding: 20px;
     background: rgba(67, 97, 238, 0.05);
-    border-radius: 10px;
+    border-radius: 12px;
     border: 1px solid rgba(67, 97, 238, 0.1);
   }
 
   .demo-btn {
     display: inline-block;
-    padding: 12px 24px;
+    padding: 14px 28px;
     background: linear-gradient(135deg, #4361ee, #3a0ca3);
     color: white;
     font-weight: 600;
@@ -466,13 +590,13 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
 
   .demo-schedule {
     color: #5a6c7d;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
 
   .requests-btn {
     display: block;
     width: 100%;
-    padding: 12px;
+    padding: 16px;
     background: linear-gradient(135deg, #4361ee, #3a0ca3);
     color: white;
     font-weight: 600;
@@ -481,7 +605,8 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
     text-align: center;
-    margin-top: 20px;
+    margin-top: 25px;
+    font-size: 1rem;
   }
 
   .requests-btn:hover {
@@ -491,12 +616,13 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
 
   /* Edit Profile Form */
   .edit-profile-card {
-    background: #fff;
+    background: rgba(243, 253, 246, 0.95);
+    box-shadow: 0 4px 20px rgba(71, 71, 71, 0.23);
+    padding: 40px;
     border-radius: 16px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    position: relative;
     border: 1px solid rgba(67, 97, 238, 0.1);
+    position: relative;
+    overflow: hidden;
     animation: slideUp 0.8s ease-out 0.2s both;
   }
 
@@ -506,9 +632,8 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     top: 0;
     left: 0;
     width: 100%;
-    height: 4px;
+    height: 0px;
     background: linear-gradient(90deg, #4361ee, #3a0ca3);
-    border-radius: 16px 16px 0 0;
   }
 
   .form-title {
@@ -525,7 +650,7 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 50px;
+    width: 60px;
     height: 3px;
     background: linear-gradient(90deg, #4361ee, #3a0ca3);
   }
@@ -573,7 +698,7 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
 
   textarea.form-input {
     resize: vertical;
-    min-height: 100px;
+    min-height: 120px;
   }
 
   .file-input {
@@ -582,7 +707,7 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
 
   .submit-btn {
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     border: none;
     border-radius: 8px;
     background: linear-gradient(135deg, #4361ee, #3a0ca3);
@@ -606,33 +731,29 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
 
   /* Alerts */
   .alert {
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 25px;
-    font-weight: 600;
-    animation: fadeInUp 0.6s ease-in-out;
-    position: relative;
-    z-index: 999;
-  }
-
-  .alert-danger {
     background: rgba(231, 76, 60, 0.1);
-    color: #c0392b;
     border-left: 4px solid #e74c3c;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 600;
+    word-wrap: break-word;
+    animation: shake 0.5s ease;
   }
 
-  .alert-success {
+  .alert.alert-success {
     background: rgba(46, 204, 113, 0.1);
-    color: #27ae60;
     border-left: 4px solid #2ecc71;
+    color: #27ae60;
   }
 
-  @keyframes fadeInUp {
-    0% { opacity: 0; transform: translateY(40px) scale(0.95); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
+  .alert.alert-danger {
+    color: #c0392b;
   }
 
-  @keyframes slideUp {
+  /* Animations */
+  @keyframes slideUp { 
     from { 
       opacity: 0; 
       transform: translateY(30px); 
@@ -642,6 +763,13 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
       transform: translateY(0); 
     } 
   }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+
   /* Footer Styles */
   footer {
     width: 100%;
@@ -741,12 +869,11 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     font-size: 0.9rem;
   }
 
-
   /* Responsive Design */
   @media (max-width: 1024px) {
     .profile-container {
       grid-template-columns: 1fr;
-      gap: 25px;
+      gap: 30px;
     }
   }
 
@@ -760,23 +887,17 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     }
     
     .profile-card, .edit-profile-card {
-      padding: 25px 20px;
+      padding: 30px 20px;
     }
     
     .form-grid {
       grid-template-columns: 1fr;
     }
     
-    .circle:nth-child(2) {
-      left: 75%;
-    }
-    
-    .circle:nth-child(3) {
-      left: 80%;
-    }
-    
-    .circle:nth-child(5) {
-      left: 65%;
+    .user-avatar {
+      width: 140px;
+      height: 140px;
+      font-size: 3.5rem;
     }
   }
 
@@ -794,28 +915,25 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     }
     
     .profile-card, .edit-profile-card {
-      padding: 20px 15px;
+      padding: 25px 15px;
     }
     
     .user-avatar {
       width: 120px;
       height: 120px;
+      font-size: 3rem;
     }
     
-    .circle {
-      display: none;
+    .user-name {
+      font-size: 1.5rem;
     }
     
-    .circle:nth-child(1) {
-      display: block;
-      width: 60px;
-      height: 60px;
+    .form-title {
+      font-size: 1.3rem;
     }
     
-    .circle:nth-child(4) {
-      display: block;
-      width: 80px;
-      height: 80px;
+    .footer-links {
+      gap: 15px;
     }
   }
 </style>
@@ -840,7 +958,9 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     <button onclick="location.href='home.php'"><i class="fas fa-home"></i> Home</button>
     <button onclick="location.href='mentor_dashboard.php'"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
     <button onclick="location.href='logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    <button onclick="location.href='mentor_register_form.php'"><i class="fas fa-sign-out-alt"></i> Register</button>
+    <?php if (!$is_own_profile): ?>
+    <button onclick="location.href='mentor_profile.php'"><i class="fas fa-user"></i> My Profile</button>
+    <?php endif; ?>
   </div>
 </nav>
 
@@ -849,36 +969,60 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
     <!-- Profile Card -->
     <div class="profile-card">
       <div class="profile-header">
-        <img src="<?= $profile_pic ? htmlspecialchars($profile_pic) : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' ?>" alt="Profile Picture" class="user-avatar">
+        <?php if (!empty($profile_pic) && file_exists($profile_pic)): ?>
+          <div class="user-avatar">
+            <img src="<?= htmlspecialchars($profile_pic) ?>" alt="<?= htmlspecialchars($full_name ?: $username) ?>">
+          </div>
+        <?php else: ?>
+          <div class="user-avatar no-pic">
+            <?php 
+              // Display initials if no profile picture
+              $initials = '';
+              if (!empty($full_name)) {
+                $name_parts = explode(' ', $full_name);
+                $initials = '';
+                foreach ($name_parts as $part) {
+                  if (strlen($initials) < 2) {
+                    $initials .= strtoupper(substr($part, 0, 1));
+                  }
+                }
+                if (empty($initials) && !empty($username)) {
+                  $initials = strtoupper(substr($username, 0, 2));
+                }
+              } else {
+                $initials = strtoupper(substr($username, 0, 2));
+              }
+              echo $initials;
+            ?>
+          </div>
+        <?php endif; ?>
         <h2 class="user-name"><?= htmlspecialchars($full_name ?: $username) ?></h2>
         <div class="user-title"><?= htmlspecialchars($subject) ?> Mentor</div>
         <div class="user-rating">
           <div class="rating-stars">
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star-half-alt"></i>
+            <?php echo generateStars($average_rating); ?>
           </div>
-          <span class="rating-value">4.7</span>
+          <span class="rating-value"><?= $average_rating ?>/5</span>
+          <span class="rating-count">(<?= $total_ratings ?> reviews)</span>
         </div>
       </div>
 
-      <div class="profile-stats">
-        <div class="stat">
-          <div class="stat-value">42</div>
-          <div class="stat-label">Students</div>
-        </div>
-        <div class="stat">
-          <div class="stat-value">156</div>
-          <div class="stat-label">Sessions</div>
-        </div>
-        <div class="stat">
-          <div class="stat-value">98%</div>
-          <div class="stat-label">Satisfaction</div>
-        </div>
+      <?php if ($total_ratings > 0): ?>
+      <div class="rating-breakdown">
+        <h4>Rating Breakdown</h4>
+        <?php for ($i = 5; $i >= 1; $i--): ?>
+          <div class="breakdown-row">
+            <span><?= $i ?> star<?= $i > 1 ? 's' : '' ?></span>
+            <div class="breakdown-bar">
+              <div class="breakdown-fill" style="width: <?= ($total_ratings > 0) ? ($rating_breakdown[$i] / $total_ratings * 100) : 0 ?>%"></div>
+            </div>
+            <span class="breakdown-count"><?= $rating_breakdown[$i] ?></span>
+          </div>
+        <?php endfor; ?>
       </div>
+      <?php endif; ?>
 
+      <!-- Profile details section (stats removed) -->
       <div class="profile-details">
         <div class="detail-item">
           <i class="fas fa-university"></i>
@@ -908,7 +1052,7 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
 
       <div class="about-section">
         <h3 class="section-title">About</h3>
-        <p class="about-text"><?= nl2br(htmlspecialchars($bio ?: "Experienced mentor with a passion for helping students achieve their academic and career goals. Specializing in " . htmlspecialchars($subject) . " with a practical approach that combines theoretical knowledge with real-world applications.")) ?></p>
+        <p class="about-text"><?= !empty($bio) ? nl2br(htmlspecialchars($bio)) : 'No bio information available.' ?></p>
       </div>
 
       <?php if (!empty($demo_link)): ?>
@@ -981,6 +1125,7 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
             <div class="form-group">
               <label class="form-label" for="profile_pic">Profile Picture</label>
               <input type="file" name="profile_pic" class="form-input file-input" accept="image/*">
+              <small style="color: #5a6c7d; font-size: 0.85rem;">Leave empty to keep current picture</small>
             </div>
 
             <div class="form-group">
@@ -1006,35 +1151,33 @@ if ($is_own_profile && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['up
 </div>
 
 <!-- Footer -->
-  <footer>
-    <div class="footer-content">
-      <div class="footer-logo">
-        <i class="fas fa-robot"></i>FutureBot
-      </div>
-      
-      <div class="footer-links">
-        <a href="index.php">Home</a>
-        <a href="about.php">About Us</a>
-       
-        <a href="privacy.php">Privacy Policy</a>
-        <a href="terms.php">Terms of Service</a>
-        <a href="contact.php">Contact Us</a>
-      </div>
-      
-      <div class="footer-social">
-        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
-        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-        <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
-        <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
-      </div>
-      
-      <div class="footer-bottom">
-        <p>&copy; 2024 FutureBot. All rights reserved. | Empowering students with AI-driven career guidance</p>
-      </div>
+<footer>
+  <div class="footer-content">
+    <div class="footer-logo">
+      <i class="fas fa-robot"></i>FutureBot
     </div>
-  </footer>
-
+    
+    <div class="footer-links">
+      <a href="index.php">Home</a>
+      <a href="about.php">About Us</a>
+      <a href="privacy.php">Privacy Policy</a>
+      <a href="terms.php">Terms of Service</a>
+      <a href="contact.php">Contact Us</a>
+    </div>
+    
+    <div class="footer-social">
+      <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+      <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+      <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+      <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+      <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+    </div>
+    
+    <div class="footer-bottom">
+      <p>&copy; 2024 FutureBot. All rights reserved. | Empowering students with AI-driven career guidance</p>
+    </div>
+  </div>
+</footer>
 
 <script>
 // Auto-hide success message after 5 seconds
@@ -1054,14 +1197,37 @@ document.addEventListener('DOMContentLoaded', function() {
   inputs.forEach(input => {
     // Add focus effect
     input.addEventListener('focus', function() {
-      this.style.transform = 'scale(1.02)';
+      this.parentElement.style.transform = 'scale(1.02)';
     });
     
     // Remove focus effect
     input.addEventListener('blur', function() {
-      this.style.transform = 'scale(1)';
+      this.parentElement.style.transform = 'scale(1)';
     });
   });
+
+  // Preview profile picture before upload
+  const profilePicInput = document.querySelector('input[name="profile_pic"]');
+  if (profilePicInput) {
+    profilePicInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.querySelector('.user-avatar img');
+          if (preview) {
+            preview.src = e.target.result;
+          } else {
+            const avatarDiv = document.querySelector('.user-avatar');
+            if (avatarDiv) {
+              avatarDiv.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
 });
 </script>
 
