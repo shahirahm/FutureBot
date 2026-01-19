@@ -49,6 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_post'])) {
     }
 }
 
+
+
+
+
 // Fetch mentor's existing posts
 $posts = [];
 $posts_stmt = $conn->prepare("SELECT post_id, title, description, experience, availability, fee, subjects, contact_email, status, created_at FROM mentor_posts WHERE mentor_id = ? ORDER BY created_at DESC");
@@ -703,7 +707,12 @@ if ($profile_stmt) {
 </head>
 <body>
 
+
+
+
 <!-- Animated Background -->
+
+
 <div class="background-animation">
     <div class="circle"></div>
     <div class="circle"></div>
@@ -870,6 +879,9 @@ if ($profile_stmt) {
 </div>
 
 <!-- Footer -->
+
+
+
   <footer>
     <div class="footer-content">
       <div class="footer-logo">
@@ -925,6 +937,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+
+
 </script>
 
 </body>
