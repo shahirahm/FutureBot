@@ -22,24 +22,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - FutureBot AI Career Path Advisor</title>
+    <title>Admin Login - FutureBot</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { 
             box-sizing: border-box; 
-            margin:0; 
-            padding:0; 
+            margin: 0; 
+            padding: 0; 
         }
+        
         html, body {
             width: 100%;
             height: 100%;
             overflow-x: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            background: linear-gradient(135deg, #e6f8e8 0%, #e4f0e8 100%);
             color: #2c3e50;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            align-items: center;
         }
 
         /* Animated Background */
@@ -115,20 +116,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
         }
 
-        /* Navigation */
+        /* Navbar */
         nav {
             width: 100%;
             padding: 15px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            background: rgba(243, 253, 246, 0.95);
+            box-shadow: 0 4px 20px rgba(71, 71, 71, 0.23);
             position: fixed;
             top: 0;
             z-index: 1000;
             border-bottom: 1px solid rgba(67, 97, 238, 0.1);
         }
+        
         nav .logo {
             font-size: 1.8rem;
             font-weight: bold;
@@ -140,8 +142,38 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             align-items: center;
             gap: 10px;
         }
+        
         nav .logo i {
             font-size: 1.5rem;
+        }
+        
+        nav .nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        nav .nav-buttons button {
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        nav .nav-buttons button:hover {
+            background: linear-gradient(135deg, #3a0ca3, #4361ee);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
         }
 
         /* Main Content */
@@ -151,32 +183,39 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             align-items: center;
             width: 100%;
             margin-top: 100px;
-            padding: 40px 20px;
-            flex: 1;
+            padding: 0 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeIn 0.8s ease;
         }
 
-        /* Login Container */
-        .login-container {
-            background: #fff;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Login Card */
+        .login-card {
+            background: rgba(243, 253, 246, 0.95);
+            box-shadow: 0 4px 20px rgba(71, 71, 71, 0.23);
             padding: 50px 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
-            width: 100%;
-            max-width: 480px;
-            animation: slideUp 0.8s ease-out;
-            border: 1px solid rgba(67, 97, 238, 0.15);
+            border-radius: 16px;
+            border: 1px solid rgba(67, 97, 238, 0.1);
             position: relative;
             overflow: hidden;
+            animation: slideUp 0.8s ease-out;
+            width: 100%;
         }
 
-        .login-container::before {
+        .login-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 5px;
-            background: linear-gradient(90deg, #4361ee, #3a0ca3, #7209b7);
+            height: 0px;
+            background: linear-gradient(90deg, #4361ee, #3a0ca3);
         }
 
         .login-header {
@@ -184,19 +223,39 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             margin-bottom: 40px;
         }
 
-        .login-header h2 {
-            font-size: 2.2rem;
+        .login-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            margin: 0 auto 25px;
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .login-icon:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 12px 30px rgba(67, 97, 238, 0.4);
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
             color: #2c3e50;
-            font-weight: 800;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             position: relative;
             display: inline-block;
         }
 
-        .login-header h2::after {
+        .login-title::after {
             content: '';
             position: absolute;
-            bottom: -12px;
+            bottom: -15px;
             left: 50%;
             transform: translateX(-50%);
             width: 80px;
@@ -205,83 +264,67 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             border-radius: 2px;
         }
 
-        .login-header p {
+        .login-subtitle {
             color: #5a6c7d;
             font-size: 1.1rem;
             margin-top: 25px;
             line-height: 1.6;
         }
 
-        .admin-icon {
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(135deg, #4361ee, #3a0ca3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 25px;
-            color: white;
-            font-size: 2.2rem;
-            box-shadow: 0 12px 30px rgba(67, 97, 238, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .admin-icon:hover {
-            transform: scale(1.05) rotate(5deg);
-            box-shadow: 0 15px 35px rgba(67, 97, 238, 0.5);
-        }
-
-        .input-group {
-            position: relative;
+        /* Form Styles */
+        .form-group {
             margin-bottom: 25px;
+            position: relative;
         }
 
-        .input-group i {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #4361ee;
-            z-index: 1;
-            font-size: 1.1rem;
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 0.95rem;
         }
 
-        input[type="text"],
-        input[type="password"] {
+        .form-input {
             width: 100%;
-            padding: 16px 20px 16px 50px;
-            border: 2px solid #e8ecf1;
-            border-radius: 12px;
-            background: #fafbfc;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f8f9fa;
             color: #2c3e50;
             font-size: 16px;
-            transition: all 0.3s ease;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
-        input:focus {
+        .form-input:focus {
             outline: none;
             border-color: #4361ee;
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
         }
 
-        input::placeholder {
+        .form-input::placeholder {
             color: #95a5a6;
-            font-weight: 400;
         }
 
-        button[type="submit"] {
+        .form-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4361ee;
+            font-size: 1.1rem;
+        }
+
+        .submit-btn {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             background: linear-gradient(135deg, #4361ee, #3a0ca3);
             color: #fff;
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -290,12 +333,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             justify-content: center;
             gap: 10px;
             margin-top: 15px;
-            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.35);
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
             position: relative;
             overflow: hidden;
         }
 
-        button[type="submit"]::before {
+        .submit-btn::before {
             content: '';
             position: absolute;
             top: 0;
@@ -306,30 +349,40 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             transition: left 0.5s;
         }
 
-        button[type="submit"]:hover::before {
+        .submit-btn:hover::before {
             left: 100%;
         }
 
-        button[type="submit"]:hover {
+        .submit-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(67, 97, 238, 0.5);
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
         }
 
-        .error {
-            background: rgba(231, 76, 60, 0.08);
-            border: 1px solid rgba(231, 76, 60, 0.2);
+        /* Alerts */
+        .alert {
+            background: rgba(231, 76, 60, 0.1);
             border-left: 4px solid #e74c3c;
-            padding: 16px;
-            border-radius: 10px;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 25px;
             text-align: center;
             font-weight: 600;
             word-wrap: break-word;
-            color: #c0392b;
             animation: shake 0.5s ease;
-            font-size: 0.95rem;
+            width: 100%;
         }
 
+        .alert.alert-success {
+            background: rgba(46, 204, 113, 0.1);
+            border-left: 4px solid #2ecc71;
+            color: #27ae60;
+        }
+
+        .alert.alert-danger {
+            color: #c0392b;
+        }
+
+        /* Back Link */
         .back-link {
             margin-top: 30px;
             text-align: center;
@@ -346,7 +399,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 8px;
             background: rgba(67, 97, 238, 0.05);
         }
@@ -358,15 +411,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         /* Animations */
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes slideUp { 
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            } 
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            } 
         }
 
         @keyframes shake {
@@ -380,6 +433,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             width: 100%;
             background: rgba(255, 255, 255, 0.95);
             padding: 30px 20px;
+            margin-top: 50px;
             border-top: 1px solid rgba(67, 97, 238, 0.1);
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
         }
@@ -475,25 +529,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .main-content {
-                padding: 30px 15px;
-                margin-top: 80px;
-            }
-
-            .login-container {
-                padding: 40px 30px;
-                width: 95%;
-            }
-
             nav {
                 padding: 15px 20px;
             }
-
-            .login-header h2 {
-                font-size: 2rem;
+            
+            .main-content {
+                padding: 20px 15px;
+                margin-top: 80px;
             }
-
-            .admin-icon {
+            
+            .login-card {
+                padding: 40px 30px;
+            }
+            
+            .login-title {
+                font-size: 1.8rem;
+            }
+            
+            .login-icon {
                 width: 80px;
                 height: 80px;
                 font-size: 2rem;
@@ -501,32 +554,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         @media (max-width: 500px) {
-            nav {
-                padding: 12px 15px;
+            nav { 
+                flex-direction: column; 
+                gap: 10px; 
+                padding: 15px 20px;
             }
-
-            .login-container {
+            
+            nav .nav-buttons {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .login-card {
                 padding: 30px 20px;
             }
-
-            .login-header h2 {
-                font-size: 1.8rem;
+            
+            .login-title {
+                font-size: 1.6rem;
             }
-
-            .admin-icon {
+            
+            .login-icon {
                 width: 70px;
                 height: 70px;
                 font-size: 1.8rem;
             }
-
-            .footer-links {
-                flex-direction: column;
-                gap: 15px;
+            
+            .form-input {
+                padding: 12px 15px 12px 40px;
+                font-size: 15px;
             }
-
-            input[type="text"],
-            input[type="password"] {
-                padding: 14px 16px 14px 45px;
+            
+            .form-icon {
+                left: 12px;
+                font-size: 1rem;
+            }
+            
+            .footer-links {
+                gap: 15px;
             }
         }
     </style>
@@ -542,47 +607,50 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <div class="circle"></div>
 </div>
 
-<!-- Navigation -->
+<!-- Navbar -->
 <nav>
     <div class="logo">
         <i class="fas fa-robot"></i>FutureBot
     </div>
+    <div class="nav-buttons">
+        <button onclick="location.href='index.php'"><i class="fas fa-home"></i> Home</button>
+        <button onclick="location.href='admin_dashboard.php'"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
+    </div>
 </nav>
 
-<!-- Main Content -->
 <div class="main-content">
-    <div class="login-container">
+    <div class="login-card">
         <div class="login-header">
-            <div class="admin-icon">
+            <div class="login-icon">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h2>Admin Login</h2>
-            <p>Secure access to FutureBot administration panel. Enter your credentials to continue.</p>
+            <h2 class="login-title">Admin Login</h2>
+            <p class="login-subtitle">Secure access to FutureBot administration panel. Enter your credentials to continue.</p>
         </div>
 
         <?php if (!empty($login_error)): ?>
-            <div class="error"><?= htmlspecialchars($login_error) ?></div>
+            <div class="alert alert-danger"><?= htmlspecialchars($login_error) ?></div>
         <?php endif; ?>
 
         <form method="POST" action="">
-            <div class="input-group">
-                <i class="fas fa-user"></i>
-                <input type="text" name="username" placeholder="Admin Username" required />
+            <div class="form-group">
+                <i class="fas fa-user form-icon"></i>
+                <input type="text" name="username" class="form-input" placeholder="Admin Username" required />
             </div>
             
-            <div class="input-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" name="password" placeholder="Password" required />
+            <div class="form-group">
+                <i class="fas fa-lock form-icon"></i>
+                <input type="password" name="password" class="form-input" placeholder="Password" required />
             </div>
             
-            <button type="submit">
+            <button type="submit" class="submit-btn">
                 <i class="fas fa-sign-in-alt"></i> Login to Admin Panel
             </button>
         </form>
 
         <div class="back-link">
             <a href="index.php">
-                <i class="fas fa-arrow-left"></i> Back to login
+                <i class="fas fa-arrow-left"></i> Back to Main Site
             </a>
         </div>
     </div>
@@ -598,7 +666,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <div class="footer-links">
             <a href="index.php">Home</a>
             <a href="about.php">About Us</a>
-            <a href="career_suggestions.php">Career Suggestions</a>
             <a href="privacy.php">Privacy Policy</a>
             <a href="terms.php">Terms of Service</a>
             <a href="contact.php">Contact Us</a>
@@ -621,24 +688,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <script>
     // Add interactive effects to form inputs
     document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input');
+        const inputs = document.querySelectorAll('.form-input');
         
         inputs.forEach(input => {
             // Add focus effect
             input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'translateY(-2px)';
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'transform 0.3s ease';
             });
             
             // Remove focus effect
             input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'translateY(0)';
+                this.parentElement.style.transform = 'scale(1)';
             });
         });
 
         // Add loading state to submit button
         const form = document.querySelector('form');
         form.addEventListener('submit', function() {
-            const submitBtn = this.querySelector('button[type="submit"]');
+            const submitBtn = this.querySelector('.submit-btn');
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
             submitBtn.disabled = true;
         });
