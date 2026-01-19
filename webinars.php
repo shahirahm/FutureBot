@@ -7,9 +7,13 @@ if (!isset($_SESSION['email'])) {
     exit;
 }
 
+
+
 $user_email = $_SESSION['email'];
 $upcoming_webinars = [];
 $registered_webinars = [];
+
+
 
 // Fetch all upcoming webinars
 $sql = "SELECT w.* FROM Webinars w WHERE w.scheduled_at > NOW() ORDER BY w.scheduled_at ASC";
@@ -32,6 +36,8 @@ if ($stmt) {
     $stmt->close();
 }
 
+
+
 // Fetch user's registered webinars
 $sql = "SELECT w.*, uw.registered_at 
         FROM User_Webinars uw 
@@ -48,6 +54,7 @@ if ($stmt) {
     }
     $stmt->close();
 }
+
 
 $conn->close();
 ?>
