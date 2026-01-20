@@ -19,6 +19,7 @@ if (!$job_id) {
     die("Job ID is missing.");
 }
 
+
 try {
     // Check if already applied
     $stmt = $pdo->prepare("SELECT * FROM jobapplications WHERE job_id = ? AND applicant_id = ?");
