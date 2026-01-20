@@ -3,7 +3,6 @@ require_once 'db.php';
 
 // Removed session check for admin login
 
-
 $errors = [];
 $success = "";
 
