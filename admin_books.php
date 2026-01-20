@@ -1,22 +1,20 @@
 <?php
 require_once 'db.php';
 
-
-
-
+// Removed session check for admin login
 
 
 $errors = [];
 $success = "";
 
-
+// Handle new book upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
     $title = trim($_POST['title'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $skill = trim($_POST['skill'] ?? '');
     $price = floatval($_POST['price'] ?? 0);
 
-
+    // Image upload handling
     $image_path = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
